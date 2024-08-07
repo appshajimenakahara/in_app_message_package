@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class NotificationDialog extends StatelessWidget {
   final String title;
   final String content;
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
   final VoidCallback? onUpdate;
 
   const NotificationDialog({
@@ -63,10 +63,11 @@ class NotificationDialog extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      onPressed: onClose,
-                      child: const Text('閉じる'),
-                    ),
+                    if (onClose != null)
+                      TextButton(
+                        onPressed: onClose,
+                        child: const Text('閉じる'),
+                      ),
                     if (onUpdate != null) ...[
                       const SizedBox(width: 8),
                       ElevatedButton(
@@ -86,20 +87,27 @@ class NotificationDialog extends StatelessWidget {
 }
 
 // 使用例
-void showNotificationDialog(BuildContext context) {
+void showNotificationDialog(
+  BuildContext context, {
+  required String title,
+  required String content,
+  required bool isForceUpdate,
+  required VoidCallback? updateAction,
+}) {
   showDialog(
     context: context,
     barrierColor: Colors.transparent,
     builder: (BuildContext context) {
       return NotificationDialog(
-        title: 'お知らせ',
-        content: 'これは新しいお知らせです。アプリの新機能が利用可能になりました！',
-        onClose: () => Navigator.of(context).pop(),
-        onUpdate: () {
-          // アップデート処理をここに記述
-          print('アップデートボタンが押されました');
-          Navigator.of(context).pop();
-        },
+        title: title,
+        content: content,
+        onClose: isForceUpdate ? null : () => Navigator.of(context).pop(),
+        onUpdate: updateAction == null
+            ? null
+            : () {
+                updateAction();
+                Navigator.of(context).pop();
+              },
       );
     },
   );
